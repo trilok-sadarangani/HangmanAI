@@ -11,7 +11,7 @@ public class Hangman {
     // static void UserPlay(HangmanGame game) {
     //     while (game.guess_count > 0) {
     //         if (game.current.toString().equals(game.answer)) {
-    //             System.out.println("Well Done."  + game.answer + " is the final word"); 
+    //             System.out.println("Well Done. "  + game.answer + " is the final word"); 
     //             return; 
     //         }
     //         Scanner input = new Scanner(System.in); 
@@ -51,7 +51,7 @@ public class Hangman {
     //         game.guesses.add(move);   
     //         System.out.println();  
     //     }   
-    //     System.out.println("GAME OVER. THE WORD IS " + game.answer); 
+    //     System.out.println("GAME OVER. THE WORD IS " + game.answer.toUpperCase()); 
     //     return; 
     // }
     public static Prisoner getInfo(String info, Prisoner prisoner) {
@@ -94,7 +94,6 @@ public class Hangman {
             System.out.println(); 
             System.out.println("REMAINING GUESSES: "  + game.guess_count);
             System.out.println("GUESS: " + move); 
-            
             
             if (!game.answer.contains(move)) { 
                 System.out.println(move + " DOESN'T EXIST"); 
@@ -181,10 +180,21 @@ public class Hangman {
         }
         return potential; 
     }
+    static void update(String s) {
+        String gameUrl = "http://gallows.hulu.com/play?code=trilok.sadarangani@duke.edu" + s; 
+        try{
+            BufferedReader in = new BufferedReader(new InputStreamReader(new URL(gameUrl).openStream()));
+            String info = in.readLine();
+            //getInfo(info, prisoner);  
+        }catch(IOException e){
+            System.err.println(e);
+        }
+    }
+    
     public static void main(String[] args) {
         HangmanGame game = new HangmanGame(); 
-        String gameUrl = "http://gallows.hulu.com/play?code=trilok.sadarangani@duke.edu"; 
         Prisoner prisoner = new Prisoner(); 
+        String gameUrl = "http://gallows.hulu.com/play?code=trilok.sadarangani@duke.edu"; 
         try{
             BufferedReader in = new BufferedReader(new InputStreamReader(new URL(gameUrl).openStream()));
             String info = in.readLine();
@@ -192,8 +202,9 @@ public class Hangman {
         }catch(IOException e){
             System.err.println(e);
         }
-        AIPlay(game, prisoner); 
-        //String call = "http://gallows.hulu.com/play?code=yuebin.patrick@gmail.com" + String.format("&token=%s&guess=%s", token, "a");
+        
+        AIPlay(game, prisoner);
+        // UserPlay(game); 
 
     }
 
