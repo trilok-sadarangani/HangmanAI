@@ -2,58 +2,81 @@ import java.util.*;
 import java.lang.*; 
 import java.io.*; 
 import java.util.regex.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.net.URL;
+import java.io.InputStreamReader;
 
 public class Hangman {
-
-    static void UserPlay(HangmanGame game) {
-        while (game.guess_count > 0) {
-            if (game.current.toString().equals(game.answer)) {
-                System.out.println("Well Done."  + game.answer + " is the final word"); 
-                return; 
-            }
-            Scanner input = new Scanner(System.in); 
-            System.out.println("This is the current word: "); 
-            for (int i = 0; i < game.current.length(); i++) {
-                System.out.print(game.current.charAt(i) + " "); 
-            }
-            System.out.println("Remaining Guesses: "  + game.guess_count);
+    // static void UserPlay(HangmanGame game) {
+    //     while (game.guess_count > 0) {
+    //         if (game.current.toString().equals(game.answer)) {
+    //             System.out.println("Well Done."  + game.answer + " is the final word"); 
+    //             return; 
+    //         }
+    //         Scanner input = new Scanner(System.in); 
+    //         System.out.println("This is the current word: "); 
+    //         for (int i = 0; i < game.current.length(); i++) {
+    //             System.out.print(game.current.charAt(i) + " "); 
+    //         }
+    //         System.out.println("Remaining Guesses: "  + game.guess_count);
            
-            boolean duplicate = false; 
-            String move; 
-            do {
-                System.out.print("GUESS: "); 
-                move = input.next().toLowerCase(); 
-                if (!game.guesses.contains(move) && move.length() == 1) 
-                    duplicate = true; 
-                else 
-                    System.out.println("You have already guessed "  + move + ". Or, your guess is not a single letter"); 
-            }
-            while (!duplicate); 
+    //         boolean duplicate = false; 
+    //         String move; 
+    //         do {
+    //             System.out.print("GUESS: "); 
+    //             move = input.next().toLowerCase(); 
+    //             if (!game.guesses.contains(move) && move.length() == 1) 
+    //                 duplicate = true; 
+    //             else 
+    //                 System.out.println("You have already guessed "  + move + ". Or, your guess is not a single letter"); 
+    //         }
+    //         while (!duplicate); 
             
             
-            if (game.answer.indexOf(move) == -1) {
-                System.out.println(move + " DOESN'T EXIST"); 
-                game.guess_count--; 
-            }
-            else {
-                int count = 0; 
-                int index = game.answer.indexOf(move); 
-                while (index >= 0) {
-                    game.current.replace(index, index+1, move); 
-                    index = game.answer.indexOf(move, index + 1);
-                    count++; 
-                }
-                System.out.println("CORRECT"); 
-            }
-            game.guesses.add(move);   
-            System.out.println();  
-        }   
-        System.out.println("GAME OVER. THE WORD IS " + game.answer); 
-        return; 
+    //         if (game.answer.indexOf(move) == -1) {
+    //             System.out.println(move + " DOESN'T EXIST"); 
+    //             game.guess_count--; 
+    //         }
+    //         else {
+    //             int count = 0; 
+    //             int index = game.answer.indexOf(move); 
+    //             while (index >= 0) {
+    //                 game.current.replace(index, index+1, move); 
+    //                 index = game.answer.indexOf(move, index + 1);
+    //                 count++; 
+    //             }
+    //             System.out.println("CORRECT"); 
+    //         }
+    //         game.guesses.add(move);   
+    //         System.out.println();  
+    //     }   
+    //     System.out.println("GAME OVER. THE WORD IS " + game.answer); 
+    //     return; 
+    // }
+    public static Prisoner getInfo(String info, Prisoner prisoner) {
+
+        Pattern p = Pattern.compile("(ALIVE|DEAD|FREE)"); // STATUS
+        Matcher m = p.matcher(info);
+
+        Pattern p1 = Pattern.compile("(\\d+)"); // TOKEN
+        Matcher m1 = p1.matcher(info);
+
+        Pattern p2 = Pattern.compile("(\\d)(,)"); // GUESSES
+        Matcher m2 = p2.matcher(info);
+
+        Pattern p3 = Pattern.compile("([A-Z_'\\s]+)(\"})"); // STATE
+        Matcher m3 = p3.matcher(info);
+
+        if (m.find() && m1.find() && m2.find() && m3.find()) {
+            prisoner.setStatus(m.group()); 
+            prisoner.setToken(m1.group()); 
+            prisoner.setRemaining(m2.group(1)); 
+            prisoner.setState(m3.group(1)); 
+        }
+        return prisoner; 
     }
-
-
-    static void AIPlay(HangmanGame game) {
+    static void AIPlay(HangmanGame game, Prisoner prisoner) {
         ArrayList<String> potential = new ArrayList<>(); 
         potential = create_size(game, potential); // FILTER BY SIZE 
         game.alpha = alpha_freq(game, potential); // CREATE FREQUENCY OF LETTERS IN THE POTENTIAL LIST 
@@ -111,7 +134,6 @@ public class Hangman {
         return ans; 
     }
     static ArrayList<String> trim(ArrayList<String> potential, HangmanGame game) {
-        
         String x = "[a-z]"; 
         StringBuilder regex = new StringBuilder(); 
         for (int i = 0; i < game.current.length(); i++) {
@@ -151,7 +173,6 @@ public class Hangman {
         }
         return copy;         
     }
-    
     static ArrayList<String> create_size(HangmanGame game, ArrayList<String> potential) {
         for (String s : game.words) {
             if (s.length() == game.answer.length()) {
@@ -160,10 +181,20 @@ public class Hangman {
         }
         return potential; 
     }
-
     public static void main(String[] args) {
         HangmanGame game = new HangmanGame(); 
-        AIPlay(game); 
+        String gameUrl = "http://gallows.hulu.com/play?code=trilok.sadarangani@duke.edu"; 
+        Prisoner prisoner = new Prisoner(); 
+        try{
+            BufferedReader in = new BufferedReader(new InputStreamReader(new URL(gameUrl).openStream()));
+            String info = in.readLine();
+            prisoner = getInfo(info, prisoner);  
+        }catch(IOException e){
+            System.err.println(e);
+        }
+        AIPlay(game, prisoner); 
+        //String call = "http://gallows.hulu.com/play?code=yuebin.patrick@gmail.com" + String.format("&token=%s&guess=%s", token, "a");
+
     }
 
     
